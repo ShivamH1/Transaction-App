@@ -1,2 +1,3 @@
-JWT_SECRET = 'secret';
-module.exports = JWT_SECRET;
+module.exports = {
+	JWT_SECRET: "transaction-secret"
+}
