@@ -1,7 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 
-export default function BottomWarning({label, buttonText, to}) {
+export function BottomWarning({label, buttonText, to}) {
   return (
     <div className='py-2 text-sm flex justify-center'>
         <div>
