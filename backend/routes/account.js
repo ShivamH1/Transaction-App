@@ -1,84 +1,81 @@
-// This file contains the routes for handling account related operations.
-// It exports a router that defines the routes for the account API.
-// backend/routes/account.js
+// This file contains the routes for interacting with the account resource.
+// It handles the HTTP requests for retrieving the balance of an account
+// and transferring money between accounts.
+
 const express = require('express');
+// Express is a popular web framework for Node.js that provides middleware 
+// and routing functionality.
+
 const { authMiddleware } = require('../middleware');
+// authMiddleware is a middleware function that checks if the user is authenticated.
+
 const { Account } = require('../db');
+// Account is a model defined in the db.js file that represents an account in the database.
+
 const { default: mongoose } = require('mongoose');
+// mongoose is a MongoDB object modeling tool designed to work in an asynchronous environment.
 
-// Import the required modules
-const express = require('express'); // Express is a minimal and flexible Node.js web application framework
-const { authMiddleware } = require('../middleware'); // Middleware function to authenticate the user
-const { Account } = require('../db'); // Account model for interacting with the database
-const { default: mongoose } = require('mongoose'); // Mongoose is an Object Data Modeling (ODM) library for MongoDB and Node.js
-
-// Create a new router instance
 const router = express.Router();
+// Create a new instance of the Express router.
 
-// Define a route for getting the balance of an account.
-// This route is protected and requires authentication.
+// Handle GET request to retrieve the balance of an account.
 router.get("/balance", authMiddleware, async (req, res) => {
-    // Find the account for the authenticated user
+    // Fetch the account associated with the authenticated user.
     const account = await Account.findOne({
-        userId: req.userId // userId is a custom field in the Account model
+        userId: req.userId
     });
 
-    // Return the balance of the account as a JSON response
+    // Return the balance of the account as a JSON response.
     res.json({
         balance: account.balance
     })
 });
 
-// Define a route for transferring funds from one account to another.
-// This route is protected and requires authentication.
+// Handle POST request to transfer money between accounts.
 router.post("/transfer", authMiddleware, async (req, res) => {
-    // Start a new transaction session with MongoDB
+    // Start a new transaction.
     const session = await mongoose.startSession();
-
-    // Start the transaction
     session.startTransaction();
 
-    // Destructure the amount and to fields from the request body
+    // Extract the amount and recipient account ID from the request body.
     const { amount, to } = req.body;
 
-    // Fetch the accounts within the transaction using the session
-    // Fetch the accounts within the transaction
+    // Fetch the accounts within the transaction.
     const account = await Account.findOne({ userId: req.userId }).session(session);
 
-    // Check if the account exists and if it has sufficient balance
+    // Check if the account exists and has sufficient balance.
     if (!account || account.balance < amount) {
-        // Abort the transaction if the account does not exist or if it has insufficient balance
+        // If the account doesn't exist or doesn't have enough balance, abort the transaction.
         await session.abortTransaction();
         return res.status(400).json({
             message: "Insufficient balance"
         });
     }
 
-    // Fetch the destination account within the transaction using the session
+    // Fetch the recipient account within the transaction.
     const toAccount = await Account.findOne({ userId: to }).session(session);
 
-    // Check if the destination account exists
+    // Check if the recipient account exists.
     if (!toAccount) {
-        // Abort the transaction if the destination account does not exist
+        // If the recipient account doesn't exist, abort the transaction.
         await session.abortTransaction();
         return res.status(400).json({
             message: "Invalid account"
         });
     }
 
-    // Perform the transfer by updating the balances of the accounts within the transaction
-    // Perform the transfer
+    // Perform the transfer by updating the balances of the accounts.
     await Account.updateOne({ userId: req.userId }, { $inc: { balance: -amount } }).session(session);
     await Account.updateOne({ userId: to }, { $inc: { balance: amount } }).session(session);
 
-    // Commit the transaction
+    // Commit the transaction.
     await session.commitTransaction();
-
-    // Return a success message as a JSON response
     res.json({
         message: "Transfer successful"
     });
 });
 
-// Export the router so that it can be used in the main application
+// Export the router instance so that it can be used in the main application.
+
+
 module.exports = router;

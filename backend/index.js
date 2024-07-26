@@ -1,29 +1,33 @@
-// This is the entry point of our Express application. It sets up the server and
-// configures it to handle incoming requests.
+// This is the main entry point of the Express application.
+// It sets up the Express app, configures middleware, and defines routes.
 
-// First, we import the necessary modules:
-// - express: the web framework we're using
-// - cors: a middleware that enables Cross-Origin Resource Sharing, allowing 
-//         requests from other domains
-// - rootRouter: a module that contains the routes for our API endpoints
+const express = require('express');
+// Import the Express module, which provides a framework for building web applications and APIs.
 
-// We create a new instance of the Express application using the express() function.
+const cors = require("cors");
+// Import the CORS (Cross-Origin Resource Sharing) module, which enables servers to indicate 
+// whether or not the actual response can be shared with requesting clients from a different domain.
+
+const rootRouter = require("./routes/index");
+// Import the rootRouter module, which is a router instance that handles incoming requests.
+// It is defined in the routes/index.js file.
+
 const app = express();
+// Create a new instance of the Express application.
 
-// We use the app.use() method to specify middleware that will be applied to all 
-// incoming requests. In this case, we're using the cors() middleware to enable 
-// Cross-Origin Resource Sharing.
+// Use the CORS middleware to enable CORS for all requests.
+// This allows cross-origin requests from different domains to access the API.
 app.use(cors());
 
-// We use the app.use() method again to specify middleware that will be applied to 
-// all incoming JSON requests. This includes the parsing of JSON request bodies.
+// Use the express.json() middleware to parse incoming requests with JSON payloads.
+// This middleware automatically parses JSON data and makes it available on the request object.
 app.use(express.json());
 
-// We use the app.use() method to specify the root router for our API endpoints.
-// This means that all requests to paths starting with "/api/v1" will be handled 
-// by the rootRouter module.
+// Mount the rootRouter instance at the "/api/v1" path.
+// This means that any requests that arrive at the "/api/v1" path will be handled by the rootRouter.
 app.use("/api/v1", rootRouter);
 
-// We start the server and listen for incoming requests on port 3000.
+// Start the Express application and listen on port 8080.
+// This makes the API available at http://localhost:8080/api/v1.
 
-app.listen(3000);
+app.listen(8080);

@@ -1,22 +1,31 @@
-// This file contains the routes for user related operations.
-// It handles the signup, signin, update and bulk operations for the users.
+// This file contains the routes for user-related operations such as signup, signin, 
+// updating user information, and fetching user data in bulk.
 
-// Importing necessary modules
+// Import the required modules and dependencies
 const express = require('express');
+// Express is a popular web framework for Node.js that provides middleware and routing functionality.
 
-// Create an instance of express router
 const router = express.Router();
+// Create a new instance of the Express router.
 
-// Importing modules for validation and authentication
 const zod = require("zod");
-const { User, Account } = require("../db");
-const jwt = require("jsonwebtoken");
-const { JWT_SECRET } = require("../config");
-const  { authMiddleware } = require("../middleware");
+// Zod is a TypeScript-first schema declaration and validation library.
 
-// Define the schema for user signup
+const { User, Account } = require("../db");
+// Import the User and Account models from the db.js file.
+
+const jwt = require("jsonwebtoken");
+// Import the JSON Web Token (JWT) library for generating and verifying tokens.
+
+const { JWT_SECRET } = require("../config");
+// Import the JWT_SECRET from the config.js file.
+
+const  { authMiddleware } = require("../middleware");
+// Import the authentication middleware from the middleware.js file.
+
+// Define the schema for the signup request body
 const signupBody = zod.object({
-    username: zod.string().email(), // Email should be unique
+    username: zod.string().email(),
 	firstName: zod.string(),
 	lastName: zod.string(),
 	password: zod.string()
@@ -24,26 +33,28 @@ const signupBody = zod.object({
 
 // Route for user signup
 router.post("/signup", async (req, res) => {
-    // Validate the request body against the signupBody schema
+    // Parse the request body using the signupBody schema
     const { success } = signupBody.safeParse(req.body)
     if (!success) {
+        // If the request body doesn't match the schema, return a 411 status code with an error message
         return res.status(411).json({
             message: "Email already taken / Incorrect inputs"
         })
     }
 
-    // Check if a user with the same email already exists
+    // Check if a user with the same username already exists
     const existingUser = await User.findOne({
         username: req.body.username
     })
 
     if (existingUser) {
+        // If a user with the same username exists, return a 411 status code with an error message
         return res.status(411).json({
             message: "Email already taken/Incorrect inputs"
         })
     }
 
-    // Create a new user with the provided details
+    // Create a new user with the provided information
     const user = await User.create({
         username: req.body.username,
         password: req.body.password,
@@ -51,103 +62,105 @@ router.post("/signup", async (req, res) => {
         lastName: req.body.lastName,
     })
 
-    // Generate a unique id for the user
+    // Generate a unique user ID
     const userId = user._id;
 
-    // Create a new account for the user with a random balance
+    // Create a new account with the generated user ID and an initial balance
     await Account.create({
         userId,
         balance: 1 + Math.random() * 10000
     })
 
-    // Generate a JSON Web Token (JWT) for the user
+    // Generate a JWT token with the user ID as payload
     const token = jwt.sign({
         userId
     }, JWT_SECRET);
 
-    // Send a JSON response with the success message and the token
+    // Return a JSON response with a success message and the generated token
     res.json({
         message: "User created successfully",
         token: token
     })
 })
 
-
-// Define the schema for user signin
+// Define the schema for the signin request body
 const signinBody = zod.object({
-    username: zod.string().email(), // Email should be unique
+    username: zod.string().email(),
 	password: zod.string()
 })
 
 // Route for user signin
 router.post("/signin", async (req, res) => {
-    // Validate the request body against the signinBody schema
+    // Parse the request body using the signinBody schema
     const { success } = signinBody.safeParse(req.body)
     if (!success) {
+        // If the request body doesn't match the schema, return a 411 status code with an error message
         return res.status(411).json({
             message: "Email already taken / Incorrect inputs"
         })
     }
 
-    // Find a user with the provided email and password
+    // Find a user with the provided username and password
     const user = await User.findOne({
         username: req.body.username,
         password: req.body.password
     });
 
     if (user) {
-        // Generate a JSON Web Token (JWT) for the user
+        // If a user with the provided credentials is found, generate a JWT token with the user ID as payload
         const token = jwt.sign({
             userId: user._id
         }, JWT_SECRET);
 
-        // Send a JSON response with the success message and the token
+        // Return a JSON response with the generated token
         res.json({
             token: token
         })
         return;
     }
 
-    // Send an error response if the user is not found
+    
+    // If a user with the provided credentials is not found, return a 411 status code with an error message
     res.status(411).json({
         message: "Error while logging in"
     })
 })
 
-// Define the schema for user update
+// Define the schema for the update request body
 const updateBody = zod.object({
 	password: zod.string().optional(),
     firstName: zod.string().optional(),
     lastName: zod.string().optional(),
 })
 
-// Route for user update
+// Route for updating user information
 router.put("/", authMiddleware, async (req, res) => {
-    // Validate the request body against the updateBody schema
+    // Parse the request body using the updateBody schema
     const { success } = updateBody.safeParse(req.body)
     if (!success) {
+        // If the request body doesn't match the schema, return a 411 status code with an error message
         res.status(411).json({
             message: "Error while updating information"
         })
     }
 
-    // Update the user with the provided details
+    // Update the user with the provided ID with the provided information
     await User.updateOne(req.body, {
         id: req.userId
     })
 
-    // Send a success response
+    // Return a JSON response with a success message
     res.json({
         message: "Updated successfully"
     })
 })
 
-// Route for bulk user operations
+// Route for fetching user data in bulk
 router.get("/bulk", async (req, res) => {
-    // Get the filter from the query parameters
+    // Extract the filter from the query parameters
     const filter = req.query.filter || "";
 
-    // Find users whose first name or last name matches the filter
+    // Find all users whose first name or last name matches the filter
     const users = await User.find({
         $or: [
             { firstName: { "$regex": filter } },
@@ -155,9 +168,9 @@ router.get("/bulk", async (req, res) => {
         ]
     })
 
-    // Send a JSON response with the users
+    // Return a JSON response with the user data filtered by the provided filter
     res.json({
-        users: users.map(user => ({
+        user: users.map(user => ({
             username: user.username,
             firstName: user.firstName,
             lastName: user.lastName,
@@ -166,6 +179,6 @@ router.get("/bulk", async (req, res) => {
     })
 })
 
-// Export the router
+// Export the router for use in the main application
 
 module.exports = router;
