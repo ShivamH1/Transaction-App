@@ -5,13 +5,15 @@
 const mongoose = require("mongoose");
 
 mongoose
-  .connect("mongodb://127.0.0.1:27017/paytm", {
+  .connect("mongodb://127.0.0.1:27017/payTM", {
     // Use the `useNewUrlParser` option to enable the new URL parser
     // This option is required for MongoDB Node.js Driver 3.1.0 and later
     useNewUrlParser: true,
     // Use the `useUnifiedTopology` option to enable the new topology engine
     // This option is required for MongoDB Node.js Driver 3.1.0 and later
     useUnifiedTopology: true,
+    // useFindAndModify: false,
+    // useCreateIndex: true,
   })
   .then(() => {
     console.log("Connected to MongoDB");

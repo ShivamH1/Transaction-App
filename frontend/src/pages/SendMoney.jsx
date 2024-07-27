@@ -1,7 +1,6 @@
-import React from 'react'
+import React, { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import axios from "axios";
-import { useState } from "react";
 
 export const SendMoney = () => {
   const [searchParams] = useSearchParams();
@@ -19,7 +18,9 @@ export const SendMoney = () => {
           <div className="p-6">
             <div className="flex items-center space-x-4">
               <div className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center">
-                <span className="text-2xl text-white">{name[0].toUpperCase()}</span>
+                <span className="text-2xl text-white">
+                  {name[0].toUpperCase()}
+                </span>
               </div>
               <h3 className="text-2xl font-semibold">{name}</h3>
             </div>
@@ -27,14 +28,12 @@ export const SendMoney = () => {
               <div className="space-y-2">
                 <label
                   className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  for="amount"
+                  htmlFor="amount"
                 >
                   Amount (in Rs)
                 </label>
                 <input
-                  onChange={(e) => {
-                    setAmount(e.target.value);
-                  }}
+                  onChange={(e) => setAmount(e.target.value)}
                   type="number"
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                   id="amount"
@@ -42,20 +41,24 @@ export const SendMoney = () => {
                 />
               </div>
               <button
-                onClick={() => {
-                  axios.post(
-                    "http://localhost:8080/api/v1/account/transfer",
-                    {
-                      to: id,
-                      amount,
-                    },
-                    {
-                      headers: {
-                        Authorization:
-                          "Bearer " + localStorage.getItem("token"),
+                onClick={async () => {
+                  try {
+                    await axios.post(
+                      "http://localhost:8080/api/v1/account/transfer",
+                      {
+                        to: id,
+                        amount,
                       },
-                    }
-                  );
+                      {
+                        headers: {
+                          Authorization:
+                            "Bearer " + localStorage.getItem("token"),
+                        },
+                      }
+                    );
+                  } catch (error) {
+                    console.error("Error during money transfer:", error);
+                  }
                 }}
                 className="justify-center rounded-md text-sm font-medium ring-offset-background transition-colors h-10 px-4 py-2 w-full bg-green-500 text-white"
               >

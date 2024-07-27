@@ -4,8 +4,10 @@ import { SubHeading } from "../components/SubHeading";
 import { InputBox } from "../components/InputBox";
 import { Button } from "../components/Button";
 import { BottomWarning } from "../components/BottomWarning";
+// import { useNavigate } from "react-router-dom";
 
 export const Signin = () => {
+  // const navigate = useNavigate();
   return (
     <div className="bg-slate-300 h-screen flex justify-center">
       <div className="flex flex-col justify-center">
